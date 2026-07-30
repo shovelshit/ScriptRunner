@@ -15,6 +15,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -36,6 +37,7 @@ public class MainActivity extends AppCompatActivity {
     private TextView logText;
     private TextView adbStatusText;
     private TextView elevationStatusText;
+    private TextView notifListenerStatusText;
     private EditText remoteUrlInput;
     private RecyclerView scriptListView;
     private ScriptSetAdapter scriptSetAdapter;
@@ -54,6 +56,7 @@ public class MainActivity extends AppCompatActivity {
         logText = findViewById(R.id.text_log);
         adbStatusText = findViewById(R.id.text_adb_status);
         elevationStatusText = findViewById(R.id.text_elevation_status);
+        notifListenerStatusText = findViewById(R.id.text_notif_listener_status);
         remoteUrlInput = findViewById(R.id.edit_remote_url);
         scriptListView = findViewById(R.id.recycler_script_list);
 
@@ -74,6 +77,11 @@ public class MainActivity extends AppCompatActivity {
         fetchRemoteButton.setOnClickListener(v -> fetchRemoteConfig());
         refreshScriptsButton.setOnClickListener(v -> refreshScriptList());
         checkUpdateButton.setOnClickListener(v -> checkForUpdate(true));
+        // 点击通知监听状态跳转到「通知使用权」设置页，授权后系统开机时自动拉起进程
+        notifListenerStatusText.setOnClickListener(v -> {
+            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+            startActivity(intent);
+        });
 
         requestExternalStoragePermissionIfNeeded();
         refreshStatusView();
@@ -352,9 +360,18 @@ public class MainActivity extends AppCompatActivity {
                     + " 条，白名单命中 " + totalRunnable + " 条，"
                     + "随开机执行 " + runOnBootCount + " 套)";
 
+            // 通知监听权限状态：已授权时系统开机自动拉起进程，未授权时点击跳转设置
+            boolean notifListenerEnabled = NotificationManagerCompat
+                    .getEnabledListenerPackages(getApplicationContext())
+                    .contains(getPackageName());
+            String notifStatus = "通知监听: "
+                    + (notifListenerEnabled ? "已授权 ✓（开机自启已生效）"
+                                            : "未授权 ✗（点击此处授权以实现开机自启）");
+
             runOnUiThread(() -> {
                 adbStatusText.setText(adbStatus);
                 elevationStatusText.setText(elevationStatus);
+                notifListenerStatusText.setText(notifStatus);
                 statusText.setText(statusSummary);
             });
         });

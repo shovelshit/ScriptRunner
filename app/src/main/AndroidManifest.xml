@@ -85,6 +85,22 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!--
+            通知监听服务：系统级服务，开机时由系统自动绑定并拉起应用进程。
+            onListenerConnected 被调用时检查 boot_count 并触发脚本执行，
+            实现 LDPlayer 等模拟器上的开机自启（绕过 BOOT_COMPLETED 不分发、
+            USER_PRESENT 后台执行限制的问题）。
+            用户需在系统设置中授权「通知使用权」，授权后重启永久有效。
+        -->
+        <service
+            android:name=".BootNotificationListenerService"
+            android:exported="false"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <!-- 用于将下载到私有目录的 APK 文件以 content:// Uri 形式暴露给系统安装器（Android 7.0+ 需要） -->
         <provider
             android:name="androidx.core.content.FileProvider"

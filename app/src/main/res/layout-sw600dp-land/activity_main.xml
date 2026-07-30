@@ -73,6 +73,17 @@
                 android:textSize="@dimen/text_size_status" />
         </LinearLayout>
 
+        <!-- 通知监听权限状态（点击跳转设置授权「通知使用权」） -->
+        <TextView
+            android:id="@+id/text_notif_listener_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="#EEEEEE"
+            android:padding="8dp"
+            android:textIsSelectable="true"
+            android:textSize="@dimen/text_size_status" />
+
         <TextView
             android:id="@+id/text_status"
             android:layout_width="match_parent"
