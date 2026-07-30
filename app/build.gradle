@@ -1,0 +1,39 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.qa.prefsreset'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.qa.prefsreset"
+        minSdk 26
+        targetSdk 34
+        // versionCode/versionName 可通过 -PversionCode=xx -PversionName=x.x.x 从外部（如 CI）传入，
+        // 本地直接 ./gradlew assembleDebug 时使用下面的默认值。
+        versionCode (project.hasProperty('versionCode') ? (project.versionCode as Integer) : 1)
+        versionName (project.hasProperty('versionName') ? project.versionName : "1.0")
+    }
+
+    buildTypes {
+        // 该工具仅用于测试机场景，只提供 debug 构建，避免误发布到生产渠道；
+        // 使用固定的 debug 签名（AGP 默认 debug.keystore），保证 CI 构建产物与本地安装包签名一致，才能直接覆盖升级。
+        debug {
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'androidx.core:core:1.12.0'
+    implementation 'com.google.android.material:material:1.11.0'
+    implementation 'androidx.recyclerview:recyclerview:1.3.2'
+    implementation 'androidx.cardview:cardview:1.0.0'
+}

@@ -1,0 +1,26 @@
+name: Sync to Gitee
+
+# 每次 push 到 main 分支或 v*.*.* tag 时，自动把代码镜像到 Gitee，
+# 保持 Gitee 仓库与 GitHub 始终同步。Gitee Token 存在 Secrets 中。
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 完整历史，确保 mirror 不丢提交
+
+      - name: Mirror to Gitee
+        run: |
+          git remote add gitee "https://oauth2:${{ secrets.GITEE_TOKEN }}@gitee.com/aka-ljf/ScriptRunner.git"
+          # --force 确保 Gitee 始终与 GitHub 完全一致（GitHub 为唯一数据源）
+          git push gitee --all --force
+          git push gitee --tags --force

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+        本工程仅用于内部测试机场景：
+        通过设备已开放的 adb root / 本地 su 能力，在开机后按配置文件批量重置
+        「自有 / 已获授权测试」应用的本地状态，用于测试用例的前置数据准备。
+        请勿用于修改无权限、无测试授权的第三方应用数据。
+    -->
+
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
+    <!-- 拉取远端下发的脚本配置 JSON 以及检查/下载新版本都需要联网权限 -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 8.0+ 需要该权限才能引导用户安装下载下来的新版 APK（未知来源应用安装） -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <!--
+        申请电池优化白名单：很多厂商 ROM 在电池优化未豁免时会限制开机自启动和
+        后台/前台服务的存活时间，声明该权限后由 MainActivity 引导用户手动授权
+        （系统要求必须用户在弹窗中确认，App 无法静默获得）。
+    -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+
+    <!-- 明确支持各种尺寸屏幕（含平板/超大屏），系统不会再对本 App 做手机布局的兼容拉伸 -->
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:resizeable="true"
+        android:smallScreens="true"
+        android:xlargeScreens="true" />
+
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.ScriptRunner"
+        android:usesCleartextTraffic="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
+            android:exported="true"
+            android:resizeableActivity="true"
+            android:screenOrientation="unspecified">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".BootReceiver"
+            android:directBootAware="true"
+            android:exported="true"
+            android:enabled="true">
+            <!--
+                priority 设为较高值，让本接收器尽量早于大多数普通 App 收到开机完成
+                广播，从而更早拉起 ResetService；同时监听 LOCKED_BOOT_COMPLETED，
+                配合 directBootAware，在设备解锁前就能提前收到通知。
+
+                USER_PRESENT 是关键：LDPlayer 等模拟器不向非系统应用发送 BOOT_COMPLETED，
+                但会发送 USER_PRESENT（用户解锁屏幕时触发）。参考设备上其他能自启的第三方
+                应用（如小八Launcher），它们都注册了 USER_PRESENT 作为开机自启的实际触发源。
+            -->
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.LOCKED_BOOT_COMPLETED" />
+                <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="com.htc.intent.action.QUICKBOOT_POWERON" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".ResetService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- 用于将下载到私有目录的 APK 文件以 content:// Uri 形式暴露给系统安装器（Android 7.0+ 需要） -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_provider_paths" />
+        </provider>
+
+    </application>
+
+</manifest>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Script Runner</string>
+    <string name="main_disclaimer">仅限内部测试机使用：按配置重置「自有/已授权测试」应用的本地数据</string>
+    <string name="button_run_now">全部执行</string>
+    <string name="button_refresh_log">刷新日志</string>
+    <string name="label_recent_log">最近执行日志</string>
+    <string name="label_remote_config">远端配置拉取</string>
+    <string name="hint_remote_url">https://example.com/scripts.json</string>
+    <string name="button_fetch_remote">拉取并保存</string>
+    <string name="label_script_list">脚本列表</string>
+    <string name="button_refresh_scripts">刷新列表</string>
+    <string name="button_check_update">检查更新</string>
+</resources>

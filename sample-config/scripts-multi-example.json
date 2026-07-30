@@ -1,0 +1,25 @@
+{
+  "scripts": [
+    {
+      "id": "login_reset",
+      "name": "登录态重置",
+      "description": "清空登录 token，回到首启引导页（写 prefs 文件直接写成 commands，用 base64 编码规避多层 shell 转义问题）",
+      "runOnBoot": true,
+      "whitelist": ["com.example.myapp"],
+      "tasks": [
+        {
+          "packageName": "com.example.myapp",
+          "summary": "写入 user_prefs.xml",
+          "commands": [
+            "mkdir -p /data/data/com.example.myapp/shared_prefs",
+            "echo PD94bWwgdmVyc2lvbj0nMS4wJyBlbmNvZGluZz0ndXRmLTgnIHN0YW5kYWxvbmU9J3llcycgPz4KPG1hcD4KICAgIDxib29sZWFuIG5hbWU9ImlzX2ZpcnN0X2xhdW5jaCIgdmFsdWU9InRydWUiIC8+CiAgICA8c3RyaW5nIG5hbWU9ImxvZ2luX3Rva2VuIj48L3N0cmluZz4KICAgIDxpbnQgbmFtZT0ib25ib2FyZGluZ19zdGVwIiB2YWx1ZT0iMCIgLz4KPC9tYXA+Cg== | base64 -d > /data/data/com.example.myapp/shared_prefs/user_prefs.xml",
+            "chown $(stat -c '%u:%g' /data/data/com.example.myapp/shared_prefs) /data/data/com.example.myapp/shared_prefs/user_prefs.xml",
+            "chmod 660 /data/data/com.example.myapp/shared_prefs/user_prefs.xml",
+            "restorecon -F /data/data/com.example.myapp/shared_prefs/user_prefs.xml 2>/dev/null || true"
+          ],
+          "restartApp": true
+        }
+      ]
+    }
+  ]
+}

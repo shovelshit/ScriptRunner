@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="@dimen/item_card_margin_bottom"
+    app:cardCornerRadius="6dp"
+    app:cardElevation="1dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="@dimen/item_card_padding">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/text_script_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="@dimen/text_size_item_title"
+                    android:textStyle="bold"
+                    tools:text="登录态重置" />
+
+                <TextView
+                    android:id="@+id/text_script_meta"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#666666"
+                    android:textSize="@dimen/text_size_item_meta"
+                    tools:text="来源: 本地脚本 · 任务数 2 · 白名单命中 2" />
+
+                <TextView
+                    android:id="@+id/text_script_description"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:textColor="#999999"
+                    android:textSize="@dimen/text_size_item_meta"
+                    tools:text="清空登录 token 和首启引导标记" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <Button
+                    android:id="@+id/button_run_script"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="64dp"
+                    android:minHeight="0dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:text="执行"
+                    android:textColor="#3F51B5" />
+
+                <Button
+                    android:id="@+id/button_delete_script"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minWidth="64dp"
+                    android:minHeight="0dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
+                    android:text="删除"
+                    android:textColor="#B00020" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="随开机执行"
+                        android:textColor="#666666"
+                        android:textSize="@dimen/text_size_item_meta" />
+
+                    <Switch
+                        android:id="@+id/switch_run_on_boot"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/layout_task_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:background="#F5F5F5"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:visibility="gone">
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/text_toggle_expand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:minHeight="32dp"
+            android:gravity="center_vertical"
+            android:text="展开任务列表 ▾"
+            android:textColor="#3F51B5"
+            android:textSize="@dimen/text_size_item_meta" />
+
+    </LinearLayout>
+
+</androidx.cardview.widget.CardView>

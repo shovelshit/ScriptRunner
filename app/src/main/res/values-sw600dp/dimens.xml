@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 平板（宽度 >= 600dp，含 7 寸以上平板/折叠屏展开态）：加大内边距与字号，提升可读性和触控体验 -->
+    <dimen name="screen_padding">32dp</dimen>
+    <!-- 竖屏单栏模式下限制内容最大宽度，避免文本行在宽屏上被拉得过长导致阅读体验变差 -->
+    <dimen name="content_max_width">720dp</dimen>
+
+    <dimen name="text_size_title">26sp</dimen>
+    <dimen name="text_size_disclaimer">14sp</dimen>
+    <dimen name="text_size_status">15sp</dimen>
+    <dimen name="text_size_label">17sp</dimen>
+    <dimen name="text_size_input">14sp</dimen>
+    <dimen name="text_size_log">13sp</dimen>
+
+    <dimen name="text_size_item_title">18sp</dimen>
+    <dimen name="text_size_item_meta">13sp</dimen>
+    <dimen name="text_size_item_task">13sp</dimen>
+
+    <dimen name="item_card_padding">16dp</dimen>
+    <dimen name="item_card_margin_bottom">12dp</dimen>
+
+    <dimen name="log_panel_min_height">0dp</dimen>
+</resources>
