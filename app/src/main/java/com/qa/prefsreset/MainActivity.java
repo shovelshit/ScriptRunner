@@ -87,6 +87,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         requestExternalStoragePermissionIfNeeded();
+        requestNotificationPermissionIfNeeded();
         refreshStatusView();
         refreshScriptList();
         refreshLogView();
@@ -119,6 +120,19 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
                 startActivity(intent);
             }
+        }
+    }
+
+    /**
+     * Android 13 (API 33) 及以上需要运行时请求 POST_NOTIFICATIONS 权限，
+     * 否则普通通知（非前台服务通知）无法显示，开机自启执行结果通知用户就看不到。
+     * 首次启动时弹出系统授权弹窗，用户授权后后续重启不再弹出。
+     */
+    private void requestNotificationPermissionIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU
+                && checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, 1001);
         }
     }
 

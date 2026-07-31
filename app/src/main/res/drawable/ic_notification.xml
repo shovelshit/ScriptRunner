@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 通知栏小图标：白色终端提示符 >_ 剪影，系统会自动在状态栏渲染为单色 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Terminal prompt chevron ">" -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M6,7 L13,12 L6,17 L8,20 L18,12 L8,4 Z" />
+    <!-- Underscore / cursor bar -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M13,17 L19,17 L19,20 L13,20 Z" />
+</vector>

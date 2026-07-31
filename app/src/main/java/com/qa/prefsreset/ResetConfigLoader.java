@@ -154,6 +154,11 @@ public final class ResetConfigLoader {
         java.util.Arrays.sort(files, (a, b) -> a.getName().compareTo(b.getName()));
         for (File file : files) {
             try {
+                // 跳过空文件（如远端拉取失败后残留的 0 字节文件），避免无意义的 JSON 解析异常
+                if (file.length() == 0) {
+                    Log.w(TAG, "skip empty script file: " + file.getAbsolutePath());
+                    continue;
+                }
                 boolean isBase64 = file.getName().toLowerCase(java.util.Locale.ROOT).endsWith(BASE64_EXT);
                 String raw = readFileToString(file);
                 String json = isBase64 ? decodeFromBase64(raw) : raw;
