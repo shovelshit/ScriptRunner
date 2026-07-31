@@ -11,4 +11,6 @@
     <string name="label_script_list">脚本列表</string>
     <string name="button_refresh_scripts">刷新列表</string>
     <string name="button_check_update">检查更新</string>
+    <string name="download_progress_title">正在下载新版本…</string>
+    <string name="download_progress_initial">0%</string>
 </resources>

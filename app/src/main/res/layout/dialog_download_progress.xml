@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    前台下载新版本 APK 时展示的进度对话框：进度条 + 百分比文本 + 已下载/总大小文本。
+    通过 AlertDialog.Builder(...).setView(...) 使用，对话框本身在下载过程中不可取消。
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="24dp"
+    android:paddingEnd="24dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="8dp">
+
+    <TextView
+        android:id="@+id/text_download_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/download_progress_title"
+        android:textSize="16sp"
+        android:textStyle="bold" />
+
+    <ProgressBar
+        android:id="@+id/progress_download"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:indeterminate="false"
+        android:max="100"
+        android:progress="0"
+        android:progressTint="#3F51B5" />
+
+    <TextView
+        android:id="@+id/text_download_percent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="end"
+        android:text="@string/download_progress_initial"
+        android:textColor="#666666"
+        android:textSize="13sp" />
+
+</LinearLayout>

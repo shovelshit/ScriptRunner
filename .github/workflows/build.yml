@@ -77,3 +77,74 @@ jobs:
             ${{ steps.apk.outputs.apk_path }}
             version.json
           generate_release_notes: true
+
+      - name: Publish APK to Gitee Release
+        # 把同一份已构建好的 APK 同步发布到 Gitee Release，
+        # 这样 Gitee 仓库也能直接下载到打包产物，不需要 Gitee 端重新构建。
+        # 使用与 sync-to-gitee.yml 相同的 GITEE_TOKEN（Gitee 私人令牌）。
+        env:
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+          GITEE_OWNER: aka-ljf
+          GITEE_REPO: ScriptRunner
+          TAG_NAME: ${{ steps.version.outputs.tag_name }}
+          VERSION_NAME: ${{ steps.version.outputs.version_name }}
+          VERSION_CODE: ${{ steps.version.outputs.version_code }}
+          APK_PATH: ${{ steps.apk.outputs.apk_path }}
+          APK_NAME: ${{ steps.apk.outputs.apk_name }}
+        run: |
+          set -e
+          API="https://gitee.com/api/v5/repos/${GITEE_OWNER}/${GITEE_REPO}"
+
+          # 1. 创建 Gitee Release（若 tag 对应的 release 已存在则复用其 id）
+          CREATE_RESP=$(curl -sS -X POST "${API}/releases" \
+            -d "access_token=${GITEE_TOKEN}" \
+            -d "tag_name=${TAG_NAME}" \
+            -d "name=${TAG_NAME}" \
+            -d "body=同步自 GitHub Actions 构建产物" \
+            -d "target_commitish=main")
+          echo "create release response: ${CREATE_RESP}"
+
+          RELEASE_ID=$(echo "${CREATE_RESP}" | grep -o '"id":[0-9]*' | head -1 | grep -o '[0-9]*')
+
+          if [ -z "${RELEASE_ID}" ]; then
+            echo "Release 可能已存在，尝试查询已有 release id"
+            LIST_RESP=$(curl -sS "${API}/releases?access_token=${GITEE_TOKEN}&page=1&per_page=50")
+            RELEASE_ID=$(echo "${LIST_RESP}" | python3 -c "
+import json,sys
+data = json.load(sys.stdin)
+tag = '${TAG_NAME}'
+for r in data:
+    if r.get('tag_name') == tag:
+        print(r['id'])
+        break
+")
+          fi
+
+          if [ -z "${RELEASE_ID}" ]; then
+            echo "无法获取 Gitee release id，跳过附件上传" >&2
+            exit 1
+          fi
+          echo "Gitee release id: ${RELEASE_ID}"
+
+          # 2. 生成指向 Gitee 下载地址的 version.json（供国内下载场景使用，
+          #    与上传到 GitHub Release 的 version.json 区分开，避免互相覆盖）
+          cat > version-gitee.json << EOF
+          {
+            "versionCode": ${VERSION_CODE},
+            "versionName": "${VERSION_NAME}",
+            "changelog": "详见 Release 说明: https://gitee.com/${GITEE_OWNER}/${GITEE_REPO}/releases/${TAG_NAME}",
+            "apkUrl": "https://gitee.com/${GITEE_OWNER}/${GITEE_REPO}/releases/download/${TAG_NAME}/${APK_NAME}"
+          }
+          EOF
+          cat version-gitee.json
+          # Gitee 更新检查约定读取的文件名同样是 version.json
+          cp version-gitee.json version.json
+
+          # 3. 上传 APK 和 version.json 作为 Release 附件
+          curl -sS -X POST "${API}/releases/${RELEASE_ID}/attach_files" \
+            -F "access_token=${GITEE_TOKEN}" \
+            -F "file=@${APK_PATH}"
+
+          curl -sS -X POST "${API}/releases/${RELEASE_ID}/attach_files" \
+            -F "access_token=${GITEE_TOKEN}" \
+            -F "file=@version.json"

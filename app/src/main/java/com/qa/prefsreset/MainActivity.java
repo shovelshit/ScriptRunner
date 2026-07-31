@@ -9,8 +9,11 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.Settings;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -172,7 +175,10 @@ public class MainActivity extends AppCompatActivity {
                 .show();
     }
 
-    /** 后台下载新版本 APK，完成后唤起系统安装器；下载失败会用 Toast 提示原因 */
+    /**
+     * 前台下载新版本 APK：弹出带进度条的对话框展示实时下载进度，下载期间不可取消，
+     * 避免用户误以为无响应而反复点击；完成后自动关闭对话框并唤起系统安装器。
+     */
     private void downloadAndInstallUpdate(UpdateChecker.UpdateInfo info) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                 && !getPackageManager().canRequestPackageInstalls()) {
@@ -188,13 +194,50 @@ public class MainActivity extends AppCompatActivity {
             }
             return;
         }
-        Toast.makeText(this, "正在下载新版本...", Toast.LENGTH_SHORT).show();
+
+        View progressView = LayoutInflater.from(this).inflate(R.layout.dialog_download_progress, null);
+        ProgressBar progressBar = progressView.findViewById(R.id.progress_download);
+        TextView percentText = progressView.findViewById(R.id.text_download_percent);
+
+        AlertDialog progressDialog = new AlertDialog.Builder(this)
+                .setView(progressView)
+                .setCancelable(false)
+                .create();
+        progressDialog.show();
+
+        // 记录上一次上报的百分比，避免每读一个 8KB 缓冲区都切主线程刷新 UI，
+        // 只在百分比数值真正变化时才更新，减少不必要的开销
+        final int[] lastPercent = {-1};
         executor.execute(() -> {
             String fileName = "script-runner-" + info.versionName + ".apk";
             ApkDownloader.DownloadResult result = ApkDownloader.download(
-                    getApplicationContext(), info.apkUrl, fileName);
+                    getApplicationContext(), info.apkUrl, fileName,
+                    (downloadedBytes, totalBytes) -> {
+                        if (totalBytes > 0) {
+                            int percent = (int) (downloadedBytes * 100 / totalBytes);
+                            if (percent == lastPercent[0]) {
+                                return;
+                            }
+                            lastPercent[0] = percent;
+                            runOnUiThreadIfAlive(() -> {
+                                progressBar.setIndeterminate(false);
+                                progressBar.setProgress(percent);
+                                percentText.setText(percent + "%  ("
+                                        + formatBytes(downloadedBytes) + " / " + formatBytes(totalBytes) + ")");
+                            });
+                        } else {
+                            // 服务端未返回 Content-Length，无法计算百分比，改为不确定进度动画
+                            runOnUiThreadIfAlive(() -> {
+                                progressBar.setIndeterminate(true);
+                                percentText.setText(formatBytes(downloadedBytes));
+                            });
+                        }
+                    });
             ResetLogRepository.log((result.success ? "新版本下载成功: " : "新版本下载失败: ") + result.message);
-            runOnUiThread(() -> {
+            runOnUiThreadIfAlive(() -> {
+                if (progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
                 if (!result.success) {
                     Toast.makeText(this, result.message, Toast.LENGTH_LONG).show();
                     return;
@@ -207,6 +250,32 @@ public class MainActivity extends AppCompatActivity {
                 }
             });
         });
+    }
+
+    /**
+     * 在 UI 线程执行任务，但如果 Activity 已经销毁/正在销毁则跳过，
+     * 避免下载过程中用户退出页面后，后台线程仍尝试更新已失效的对话框/控件而抛异常。
+     */
+    private void runOnUiThreadIfAlive(Runnable action) {
+        runOnUiThread(() -> {
+            if (isFinishing() || isDestroyed()) {
+                return;
+            }
+            action.run();
+        });
+    }
+
+    /** 将字节数格式化为易读的 KB/MB 文本，用于下载进度展示 */
+    private static String formatBytes(long bytes) {
+        if (bytes < 1024) {
+            return bytes + "B";
+        }
+        double kb = bytes / 1024.0;
+        if (kb < 1024) {
+            return String.format(java.util.Locale.getDefault(), "%.1fKB", kb);
+        }
+        double mb = kb / 1024.0;
+        return String.format(java.util.Locale.getDefault(), "%.1fMB", mb);
     }
 
     /** 一键执行全部已加载脚本 */

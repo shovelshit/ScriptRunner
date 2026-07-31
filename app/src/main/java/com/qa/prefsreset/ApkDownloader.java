@@ -31,6 +31,15 @@ public final class ApkDownloader {
     private ApkDownloader() {
     }
 
+    /** 下载进度回调，运行在下载所在的后台线程，调用方需自行切换到主线程更新 UI */
+    public interface ProgressListener {
+        /**
+         * @param downloadedBytes 已下载字节数
+         * @param totalBytes      文件总字节数；服务端未返回 Content-Length 时为 -1（未知总量）
+         */
+        void onProgress(long downloadedBytes, long totalBytes);
+    }
+
     public static final class DownloadResult {
         public final boolean success;
         public final String message;
@@ -56,6 +65,16 @@ public final class ApkDownloader {
      * 配合 {@link #installApk(Context, File)} 唤起系统安装器。
      */
     public static DownloadResult download(Context context, String apkUrl, String fileName) {
+        return download(context, apkUrl, fileName, null);
+    }
+
+    /**
+     * 同步下载 APK，必须在后台线程调用，下载过程中通过 {@code listener} 实时上报进度，
+     * 供前台展示下载进度条。下载完成后可用返回结果里的 apkFile
+     * 配合 {@link #installApk(Context, File)} 唤起系统安装器。
+     */
+    public static DownloadResult download(Context context, String apkUrl, String fileName,
+                                           ProgressListener listener) {
         if (apkUrl == null || apkUrl.trim().isEmpty()) {
             return DownloadResult.fail("下载地址为空");
         }
@@ -79,12 +98,19 @@ public final class ApkDownloader {
                 return DownloadResult.fail("下载失败: HTTP " + code);
             }
 
+            long totalBytes = connection.getContentLength();
+
             try (InputStream is = connection.getInputStream();
                  FileOutputStream fos = new FileOutputStream(target)) {
                 byte[] buffer = new byte[8192];
+                long downloadedBytes = 0;
                 int n;
                 while ((n = is.read(buffer)) != -1) {
                     fos.write(buffer, 0, n);
+                    downloadedBytes += n;
+                    if (listener != null) {
+                        listener.onProgress(downloadedBytes, totalBytes);
+                    }
                 }
             }
             return DownloadResult.ok(target);
