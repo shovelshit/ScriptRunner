@@ -109,15 +109,9 @@ jobs:
           if [ -z "${RELEASE_ID}" ]; then
             echo "Release 可能已存在，尝试查询已有 release id"
             LIST_RESP=$(curl -sS "${API}/releases?access_token=${GITEE_TOKEN}&page=1&per_page=50")
-            RELEASE_ID=$(echo "${LIST_RESP}" | python3 -c "
-import json,sys
-data = json.load(sys.stdin)
-tag = '${TAG_NAME}'
-for r in data:
-    if r.get('tag_name') == tag:
-        print(r['id'])
-        break
-")
+            # 用 jq 按 tag_name 精确匹配对应的 release id（ubuntu-latest runner 已预装 jq），
+            # 避免内嵌多行 Python/awk 脚本破坏 YAML 缩进。
+            RELEASE_ID=$(echo "${LIST_RESP}" | jq -r --arg tag "${TAG_NAME}" '.[] | select(.tag_name == $tag) | .id' | head -1)
           fi
 
           if [ -z "${RELEASE_ID}" ]; then
