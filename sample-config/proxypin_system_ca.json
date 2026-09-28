@@ -1,0 +1,21 @@
+{
+  "scripts": [
+    {
+      "id": "proxypin_system_ca",
+      "name": "ProxyPin系统证书挂载（通用版）",
+      "description": "把 ProxyPin CA 以 bind mount 方式挂载为系统证书，让只信任系统证书的 App HTTPS 可抓包。自适应 Android 13（/system 挂载）与 Android 14+（conscrypt apex 挂载）；幂等：已挂载时输出 SKIP_ALREADY_ACTIVE 直接成功；重启后失效，配合 runOnBoot 每次开机自动挂载。注意：证书哈希 243f0bfb 对应 ProxyPin 默认 CA（CN=ProxyPin CA），若在 ProxyPin 中重新生成过根证书，需用 openssl x509 -subject_hash_old 重算并替换两处 243f0bfb.0。前提：ProxyPin 已安装且运行过至少一次（首次运行才会生成 CA 文件）。依赖 ScriptRunner 的 root 通道（adbd 已 root / adb root 提权 / su，三者自动适配），量产 user 构建真机不可用。",
+      "runOnBoot": true,
+      "whitelist": ["com.network.proxy"],
+      "tasks": [
+        {
+          "packageName": "com.network.proxy",
+          "summary": "读取 ProxyPin CA 并 bind mount 到系统证书目录",
+          "commands": [
+            "if [ -f /system/etc/security/cacerts/243f0bfb.0 ]; then echo SKIP_ALREADY_ACTIVE; else CA=/data/data/com.network.proxy/files/ca.crt; if [ ! -f \"$CA\" ]; then echo ERROR_PROXYPIN_CA_NOT_FOUND_RUN_PROXYPIN_ONCE; false; else rm -rf /data/local/tmp/pp-cacerts; mkdir -p /data/local/tmp/pp-cacerts; SDK=$(getprop ro.build.version.sdk); if [ \"$SDK\" -ge 34 ]; then SRC=/apex/com.android.conscrypt/cacerts; else SRC=/system/etc/security/cacerts; fi; cp \"$SRC\"/* /data/local/tmp/pp-cacerts/ && cp \"$CA\" /data/local/tmp/pp-cacerts/243f0bfb.0 && chown root:root /data/local/tmp/pp-cacerts/* && chmod 644 /data/local/tmp/pp-cacerts/* && chcon u:object_r:system_security_cacerts_file:s0 /data/local/tmp/pp-cacerts /data/local/tmp/pp-cacerts/* && { if [ \"$SDK\" -ge 34 ]; then mkdir -p /system/etc/security/cacerts 2>/dev/null || true; mount -t tmpfs tmpfs /system/etc/security/cacerts && cp /data/local/tmp/pp-cacerts/* /system/etc/security/cacerts/ && chown root:root /system/etc/security/cacerts/* && chmod 644 /system/etc/security/cacerts/* && chcon u:object_r:system_security_cacerts_file:s0 /system/etc/security/cacerts/* && mount --bind /system/etc/security/cacerts /apex/com.android.conscrypt/cacerts; else mount --bind /data/local/tmp/pp-cacerts /system/etc/security/cacerts; fi; } && [ -f /system/etc/security/cacerts/243f0bfb.0 ] && echo MOUNT_OK_ACTIVE_CERTS=$(ls /system/etc/security/cacerts | wc -l); fi; fi"
+          ],
+          "restartApp": false
+        }
+      ]
+    }
+  ]
+}
